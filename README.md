@@ -54,10 +54,29 @@ CultureSchema(source_schemas=OrderedSet([homolog_schema, group_schema]))
 Creates a dictionary, which represents the schema of the origin class/model.
 
 ```python
-my_schema.schema()
+my_homolog.schema()
+```
+Output:
+```yaml
+"class_name": "Thief"
+"common": {
+    steals_only: "jewelry"
+}
+"copycat": {}
+"pink_panther": {}
+"required": ["stolen_goods", "steals_only"]
+"field_to_info": {"stolen_goods": "integer"}
 ```
 
-Gives:
+### `.dump()`
+Dump the dictionary from `.schema()` to a yaml or toml file.
+```python
+my_schema.dump("my/path/schema.yaml")
+# There is also toml support
+my_schema.dump("my/path/schema.toml")
+```
+
+### `.parse()`
 ```yaml
 "class_name": "Thief"
 "common": {
@@ -72,16 +91,6 @@ Gives:
 "required": ["stolen_goods", "steals_only"]
 "field_to_info": {"stolen_goods": "integer"}
 ```
-
-### `.dump()`
-Dump the dictionary from `.schema()` to a yaml or toml file.
-```python
-my_schema.dump("my/path/schema.yaml")
-# There is also toml support
-my_schema.dump("my/path/schema.toml")
-```
-
-### `.parse()`
 ```python
 parsed = my_homolog.parse_schema("my/path/schema.yaml")
 
