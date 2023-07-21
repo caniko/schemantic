@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "schemantic"
+version = "0.1.0"
+description = "Manipulate model schemas utilizing homologous, grouped, or cultured paradigms"
+authors = ["caniko <python@rotas.mozmail.com>"]
+license = "BSD-4"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<4.0"
+pydantic = "^2.0"
+ordered-set = "^4.1.0"
+
+rtoml = { version="*", optional=true }
+ruamel-yaml = { version="*", optional=true }
+parameterized = "^0.9.0"
+coverage = "^7.2.7"
+
+[tool.poetry.extras]
+toml = ["rtoml"]
+yaml = ["ruamel-yaml"]
+
+[tool.poetry.group.dev.dependencies]
+parameterized = "^0.9.0"
+pytest = "^7.4.0"
+
+[tool.isort]
+profile = "black"
+line_length = 120
+
+[tool.black]
+line-length = 120
+target-version = ["py311"]
+
+[tool.ruff]
+line-length = 120
+ignore-init-module-imports = true
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

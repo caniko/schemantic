@@ -1,0 +1,5 @@
+SCHEMA_DEFINED_MAPPING_KEY: str = "defined"
+SCHEMA_REQUIRED_MAPPING_KEY: str = "required"
+SCHEMA_OPTIONAL_MAPPING_KEY: str = "optional"
+
+SCHEMA_FIELD_INFO_MAPPING_KEY = "field_to_info"
