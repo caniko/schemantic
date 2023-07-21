@@ -152,3 +152,14 @@ class TestModel(SchemanticProjectModelMixin, BaseModel):
         upstream.update(("exclude_me",))
         return upstream
 ```
+
+### Install
+```shell
+pip install schemantic
+```
+
+For `toml` or `yaml` dumping and parsing
+```shell
+pip install schemantic[toml]
+pip install schemantic[yaml]
+```
