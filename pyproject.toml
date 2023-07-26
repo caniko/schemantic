@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "schemantic"
-version = "0.1.0"
+version = "0.1.1"
 description = "Manipulate model schemas utilizing homologous, grouped, or cultured paradigms"
 authors = ["caniko <python@rotas.mozmail.com>"]
 license = "BSD-4"
@@ -13,8 +13,6 @@ ordered-set = "^4.1.0"
 
 rtoml = { version="*", optional=true }
 ruamel-yaml = { version="*", optional=true }
-parameterized = "^0.9.0"
-coverage = "^7.2.7"
 
 [tool.poetry.extras]
 toml = ["rtoml"]
