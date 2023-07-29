@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Optional, Union
+from typing import Optional
 
 from pydantic import BaseModel, computed_field, model_validator
 

@@ -1,6 +1,6 @@
 from collections.abc import Mapping, Set
 from functools import cached_property
-from typing import Any, Callable, Generic, Iterable, Optional, Type, TypeVar, Union
+from typing import Any, Callable, Generic, Iterable, Optional, Type, TypeVar
 
 from ordered_set import OrderedSet
 from pydantic import BaseModel, computed_field, field_validator, model_validator, validate_call
@@ -8,7 +8,7 @@ from pydantic import BaseModel, computed_field, field_validator, model_validator
 from schemantic.model.field_info import FieldMetadata, class_field_alias_to_type_string, model_field_alias_to_field_info
 from schemantic.model.schematic import Schematic
 from schemantic.project import SchemanticProjectMixin
-from schemantic.schema.abstract import BaseSchema, NotCultureSchema, SingleHomologousSchema
+from schemantic.schema.abstract import BaseSchema, HomologousGroupMixin, NotCultureSchema, SingleHomologousSchema
 from schemantic.utils.constant import (
     SCHEMA_DEFINED_MAPPING_KEY,
     SCHEMA_FIELD_INFO_MAPPING_KEY,
@@ -36,6 +36,7 @@ class SingleSchema(SingleHomologousSchema, Generic[T]):
     """
 
     origin: Type[T]
+    pre_definitions: dict[str, Any] | None = None
 
     def __hash__(self):
         return hash(self.origin)
@@ -66,8 +67,25 @@ class SingleSchema(SingleHomologousSchema, Generic[T]):
         return Schematic(class_name=self.origin.__name__, **required_optional_to_field_to_info)
 
     @validate_call
-    def schema(self, **schematic_dict_kwargs) -> dict[str, str | dict | list[str] | dict[str, str]]:
-        return self.schematic.schema_dict(**schematic_dict_kwargs)
+    def schema(
+        self, with_defined: bool = False, **schematic_dict_kwargs
+    ) -> dict[str, str | dict | list[str] | dict[str, str]]:
+        result = self.schematic.schema_dict(with_defined=with_defined, **schematic_dict_kwargs)
+
+        if self.pre_definitions:
+            if with_defined:
+                result["defined"] = self.pre_definitions
+            else:
+                if SCHEMA_REQUIRED_MAPPING_KEY in result:
+                    for k in result[SCHEMA_REQUIRED_MAPPING_KEY]:
+                        if k in self.pre_definitions:
+                            result[SCHEMA_REQUIRED_MAPPING_KEY][k] = self.pre_definitions[k]
+                if SCHEMA_OPTIONAL_MAPPING_KEY in result:
+                    for k in result[SCHEMA_OPTIONAL_MAPPING_KEY]:
+                        if k in self.pre_definitions:
+                            result[SCHEMA_OPTIONAL_MAPPING_KEY][k] = self.pre_definitions[k]
+
+        return result
 
     @validate_call
     def parse_schema(
@@ -86,7 +104,7 @@ class SingleSchema(SingleHomologousSchema, Generic[T]):
         }
 
 
-class HomologSchema(SingleHomologousSchema, Generic[T]):
+class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
     """
     Represents a schema with multiple instances of the same origin, but are uniquely
     identified by their names. This is often useful in situations where you have
@@ -181,7 +199,7 @@ class HomologSchema(SingleHomologousSchema, Generic[T]):
             result["common"] = {}
 
         for name in self.homolog_names(name_getter_kwargs):
-            result[name] = {}
+            result[name] = self.pre_definitions[name] if self.pre_definitions and name in self.pre_definitions else {}
 
         result.update(self.single_schema.schematic.schema_dict_field_info_extracted(with_class_name=False))
 
@@ -220,7 +238,7 @@ class HomologSchema(SingleHomologousSchema, Generic[T]):
         return cls(single_schema=SingleSchema(origin=origin), instance_names=instance_names, name_getter=name_getter)
 
 
-class GroupSchema(NotCultureSchema):
+class GroupSchema(HomologousGroupMixin, NotCultureSchema):
     """
     Represents a group of SingleSchema objects, and is used when you need to handle multiple models at the same time.
     """
@@ -297,7 +315,9 @@ class GroupSchema(NotCultureSchema):
             schema_name_to_sub_schema[name] = dict(class_name=single_schema.origin.__name__)
 
             if with_defined:
-                schema_name_to_sub_schema[name][SCHEMA_DEFINED_MAPPING_KEY] = {}
+                schema_name_to_sub_schema[name][SCHEMA_DEFINED_MAPPING_KEY] = (
+                    self.pre_definitions[name] if self.pre_definitions and name in self.pre_definitions else {}
+                )
 
             if with_required and single_schema.schematic.required:
                 schema_name_to_sub_schema[name][SCHEMA_REQUIRED_MAPPING_KEY] = list(single_schema.schematic.required)
@@ -327,14 +347,18 @@ class GroupSchema(NotCultureSchema):
             required: set[str] = set()
             optional: set[str] = set()
             for _schema_name, schema in schema_name_to_sub_schema.items():
-                required.update(schema.get("required", []))
+                required.update(schema.get(SCHEMA_REQUIRED_MAPPING_KEY, []))
                 optional.update(schema.get("optional", []))
 
             common_dict = {}
             if with_defined:
-                common_dict[SCHEMA_DEFINED_MAPPING_KEY] = {}
+                common_dict[SCHEMA_DEFINED_MAPPING_KEY] = (
+                    self.pre_definitions[SCHEMA_DEFINED_MAPPING_KEY]
+                    if self.pre_definitions and SCHEMA_DEFINED_MAPPING_KEY in self.pre_definitions
+                    else {}
+                )
             if required:
-                common_dict["required"] = list(sorted(required))
+                common_dict[SCHEMA_REQUIRED_MAPPING_KEY] = list(sorted(required))
             if optional:
                 common_dict["optional"] = list(sorted(optional))
             result["common"] = common_dict
@@ -405,14 +429,14 @@ class GroupSchema(NotCultureSchema):
         }
 
     @classmethod
-    def from_originating_types(cls, origins: Iterable[Type] | Mapping[str, Type], mapping_name: str) -> "GroupSchema":
+    def from_originating_types(cls, origins: Iterable[Type] | Mapping[str, Type], **kwargs) -> "GroupSchema":
         return cls(
             single_schemas=OrderedSet(
                 SingleSchema(origin=origin, schema_alias=alias) for alias, origin in origins.items()
             )
             if isinstance(origins, Mapping)
             else OrderedSet(SingleSchema(origin=source_schema) for source_schema in origins),
-            mapping_name=mapping_name,
+            **kwargs,
         )
 
 

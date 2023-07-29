@@ -1,11 +1,17 @@
 import unittest
-from test.abstract.assets import (
-    OtherTestDataclass,
-    TestDataclass,
+from test.schema.bare import (
     dataclass_culture_schema,
     dataclass_group_schema,
     dataclass_homolog_schema,
     dataclass_single_schema,
+)
+from test.schema.base import TestDataclass, OtherTestDataclass
+from test.schema.pre_defined import (
+    dataclass_group_with_pre_def_schema,
+    dataclass_homolog_with_pre_def_schema,
+    dataclass_single_with_pre_def_schema,
+    dataclass_group_pre_definitions,
+    class_group_pre_definitions,
 )
 from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from typing import ClassVar, Type
@@ -26,8 +32,9 @@ class WithDataclassMixin:
         self.assertTrue(self.schema_instance.parse_schema_to_instance(self.schema_with_instance_configuration))
 
 
-class TestSingleWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestSingle):
+class TestSingleWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestSingle):
     schema_instance = dataclass_single_schema
+    schema_instance_with_pre_defined = dataclass_single_with_pre_def_schema
 
     expected_schema = {
         "class_name": "TestDataclass",
@@ -41,8 +48,9 @@ class TestSingleWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestSingl
     }
 
 
-class TestHomologWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestHomolog):
+class TestHomologWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestHomolog):
     schema_instance = dataclass_homolog_schema
+    schema_instance_with_pre_defined = dataclass_homolog_with_pre_def_schema
 
     expected_schema = {
         "class_name": "TestDataclass",
@@ -61,8 +69,11 @@ class TestHomologWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestHomo
     }
 
 
-class TestGroupWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestGroup):
+class TestGroupWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestGroup):
     schema_instance = dataclass_group_schema
+    schema_instance_with_pre_defined = dataclass_group_with_pre_def_schema
+
+    pre_defined_map = dataclass_group_pre_definitions
 
     expected_schema = {
         "common": {
@@ -91,7 +102,7 @@ class TestGroupWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestGroup)
     }
 
 
-class TestCultureWithCLS(unittest.TestCase, WithDataclassMixin, AbstractTestCulture):
+class TestCultureWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestCulture):
     single_schema_instance = dataclass_single_schema
     homolog_schema_instance = dataclass_homolog_schema
     group_schema_instance = dataclass_group_schema

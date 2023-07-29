@@ -1,11 +1,11 @@
 import unittest
-from test.abstract.assets import (
-    OtherTestModel,
-    TestModel,
-    model_culture_schema,
-    model_group_schema,
-    model_homolog_schema,
-    model_single_schema,
+from test.schema.bare import model_culture_schema, model_group_schema, model_homolog_schema, model_single_schema
+from test.schema.base import TestModel, OtherTestModel
+from test.schema.pre_defined import (
+    model_group_with_pre_def_schema,
+    model_homolog_with_pre_def_schema,
+    model_single_with_pre_def_schema,
+    model_group_pre_definitions,
 )
 from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from typing import ClassVar, Type
@@ -25,6 +25,8 @@ class WithModelMixin:
 
 class TestSingleWithModel(unittest.TestCase, AbstractTestSingle):
     schema_instance = model_single_schema
+    schema_instance_with_pre_defined = model_single_with_pre_def_schema
+
     expected_schema = {
         "class_name": "TestModel",
         SCHEMA_OPTIONAL_MAPPING_KEY: {
@@ -45,6 +47,8 @@ class TestSingleWithModel(unittest.TestCase, AbstractTestSingle):
 
 class TestHomologWithModel(unittest.TestCase, AbstractTestHomolog):
     schema_instance = model_homolog_schema
+    schema_instance_with_pre_defined = model_homolog_with_pre_def_schema
+
     expected_schema = {
         "class_name": "TestModel",
         "common": {},
@@ -82,6 +86,10 @@ class TestHomologWithModel(unittest.TestCase, AbstractTestHomolog):
 
 class TestGroupWithModel(unittest.TestCase, AbstractTestGroup, WithModelMixin):
     schema_instance = model_group_schema
+    schema_instance_with_pre_defined = model_group_with_pre_def_schema
+
+    pre_defined_map = model_group_pre_definitions
+
     expected_schema = {
         "common": {
             SCHEMA_DEFINED_MAPPING_KEY: {},

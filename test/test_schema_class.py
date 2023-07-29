@@ -1,11 +1,11 @@
 import unittest
-from test.abstract.assets import (
-    OtherTestClass,
-    TestClass,
-    class_culture_schema,
-    class_group_schema,
-    class_homolog_schema,
-    class_single_schema,
+from test.schema.bare import class_culture_schema, class_group_schema, class_homolog_schema, class_single_schema
+from test.schema.base import TestClass, OtherTestClass
+from test.schema.pre_defined import (
+    class_group_with_pre_def_schema,
+    class_homolog_with_pre_def_schema,
+    class_single_with_pre_def_schema,
+    class_group_pre_definitions,
 )
 from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from typing import ClassVar, Type
@@ -28,6 +28,7 @@ class WithClassMixin:
 
 class TestSingleWithCLS(unittest.TestCase, WithClassMixin, AbstractTestSingle):
     schema_instance = class_single_schema
+    schema_instance_with_pre_defined = class_single_with_pre_def_schema
 
     expected_schema = {
         "class_name": "TestClass",
@@ -43,6 +44,7 @@ class TestSingleWithCLS(unittest.TestCase, WithClassMixin, AbstractTestSingle):
 
 class TestHomologWithCLS(unittest.TestCase, WithClassMixin, AbstractTestHomolog):
     schema_instance = class_homolog_schema
+    schema_instance_with_pre_defined = class_homolog_with_pre_def_schema
 
     expected_schema = {
         "class_name": "TestClass",
@@ -63,6 +65,9 @@ class TestHomologWithCLS(unittest.TestCase, WithClassMixin, AbstractTestHomolog)
 
 class TestGroupWithCLS(unittest.TestCase, WithClassMixin, AbstractTestGroup):
     schema_instance = class_group_schema
+    schema_instance_with_pre_defined = class_group_with_pre_def_schema
+
+    pre_defined_map = class_group_pre_definitions
 
     expected_schema = {
         "common": {
