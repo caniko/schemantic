@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "schemantic"
-version = "0.1.1"
+version = "0.3.0"
 description = "Manipulate model schemas utilizing homologous, grouped, or cultured paradigms"
 authors = ["caniko <python@rotas.mozmail.com>"]
 license = "BSD-4"

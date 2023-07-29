@@ -1,16 +1,25 @@
 from abc import ABC
+from copy import deepcopy
 from functools import cached_property
-from test.abstract.base import AbstractSchemaTester
-from typing import ClassVar
+
+from ordered_set import OrderedSet
+
+from schemantic import HomologSchema, GroupSchema, SingleSchema
+from test.abstract.base import AbstractSchemaTester, AbstractNotCulturalTester
+from typing import ClassVar, Any
 
 from parameterized import parameterized
 
-from schemantic.utils.constant import SCHEMA_DEFINED_MAPPING_KEY
+from schemantic.utils.constant import (
+    SCHEMA_DEFINED_MAPPING_KEY,
+    SCHEMA_REQUIRED_MAPPING_KEY,
+    SCHEMA_OPTIONAL_MAPPING_KEY,
+)
+from test.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
+from test.schema.pre_defined import SINGLE_PRE_DEFINITION, HOMOLOG_PRE_DEFINITION, group_pre_definition
 
-from .assets import *
 
-
-class AbstractTestSingle(AbstractSchemaTester, ABC):
+class AbstractTestSingle(AbstractNotCulturalTester, ABC):
     instance_configuration = {"must_be": 5, "we": "must_work"}
 
     @cached_property
@@ -19,6 +28,19 @@ class AbstractTestSingle(AbstractSchemaTester, ABC):
         schema[SCHEMA_DEFINED_MAPPING_KEY] = self.instance_configuration
         return schema
 
+    def test_schema_with_pre_defined(self):
+        # With defined
+        expected_schema_with_pre_defined = deepcopy(self.expected_schema)
+        expected_schema_with_pre_defined[SCHEMA_DEFINED_MAPPING_KEY] = SINGLE_PRE_DEFINITION
+        self.assertEqual(
+            self.schema_instance_with_pre_defined.schema(with_defined=True), expected_schema_with_pre_defined
+        )
+
+        # Without defined
+        expected_schema_with_pre_defined = deepcopy(self.expected_schema)
+        expected_schema_with_pre_defined[SCHEMA_OPTIONAL_MAPPING_KEY].update(SINGLE_PRE_DEFINITION)
+        self.assertEqual(self.schema_instance_with_pre_defined.schema(), expected_schema_with_pre_defined)
+
     def test_parse_schema(self):
         self.assertEqual(
             self.schema_instance.parse_schema(self.schema_with_instance_configuration),
@@ -26,18 +48,23 @@ class AbstractTestSingle(AbstractSchemaTester, ABC):
         )
 
 
-class AbstractTestHomolog(AbstractSchemaTester, ABC):
+class AbstractTestHomolog(AbstractNotCulturalTester, ABC):
     instance_configuration = dict(
         common={"must_be": 10},
         test_1={"we": "are_friends"},
         test_2={"new_age": "Unknown", "must_be": 12},
     )
 
-    @property
+    @cached_property
     def schema_with_instance_configuration(self) -> dict:
         schema = self.schema_instance.schema()
         schema.update(self.instance_configuration)
         return schema
+
+    def test_schema_with_pre_defined(self):
+        expected_schema_with_pre_defined = deepcopy(self.expected_schema)
+        expected_schema_with_pre_defined.update(HOMOLOG_PRE_DEFINITION)
+        self.assertEqual(self.schema_instance_with_pre_defined.schema(), expected_schema_with_pre_defined)
 
     def test_from_originating_type(self):
         self.assertTrue(
@@ -72,7 +99,9 @@ class AbstractTestHomolog(AbstractSchemaTester, ABC):
         )
 
 
-class AbstractTestGroup(AbstractSchemaTester, ABC):
+class AbstractTestGroup(AbstractNotCulturalTester, ABC):
+    pre_defined_map: ClassVar[dict[str, dict[str, Any]]]
+
     @cached_property
     def schema_with_instance_configuration(self) -> dict:
         schema = self.schema_instance.schema()
@@ -81,6 +110,14 @@ class AbstractTestGroup(AbstractSchemaTester, ABC):
         schema[self._test_class.__name__][SCHEMA_DEFINED_MAPPING_KEY] = {"must_be": 10}
 
         return schema
+
+    def test_schema_with_pre_defined(self):
+        expected_schema_with_pre_defined = deepcopy(self.expected_schema)
+
+        for member, pre_definition in self.pre_defined_map.items():
+            expected_schema_with_pre_defined[member][SCHEMA_DEFINED_MAPPING_KEY].update(pre_definition)
+
+        self.assertEqual(self.schema_instance_with_pre_defined.schema(), expected_schema_with_pre_defined)
 
     @parameterized.expand(
         [[OrderedSet((TestModel, OtherTestModel))], [{"MyTest": TestModel, "MyOtherTest": OtherTestModel}]]

@@ -92,6 +92,8 @@ class BaseSchema(BaseModel, ABC, arbitrary_types_allowed=True):
 
 
 class NotCultureSchema(BaseSchema, ABC):
+    pre_definitions: dict | None
+
     @abstractmethod
     def parse_schema(
         self,
@@ -141,3 +143,7 @@ class SingleHomologousSchema(NotCultureSchema, ABC):
         return {
             name: self.origin(**instance_kwargs) for name, instance_kwargs in self.parse_schema(defined_schema).items()
         }
+
+
+class HomologousGroupMixin(BaseModel, ABC):
+    pre_definitions: dict[str, dict[str, Any]] | None = None

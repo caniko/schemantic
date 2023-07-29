@@ -9,9 +9,8 @@ from schemantic.schema.abstract import BaseSchema
 
 
 class AbstractSchemaTester(ABC):
-    source_type: ClassVar[Literal["Model", "Class"]]
-
     schema_instance: ClassVar[BaseSchema]
+
     expected_schema: ClassVar[dict]
     instance_configuration: ClassVar[dict]
 
@@ -44,3 +43,11 @@ class AbstractSchemaTester(ABC):
             self.schema_instance.dump(schema_path)
 
             self.assertEqual(self.schema_instance.load(schema_path), self.expected_schema)
+
+
+class AbstractNotCulturalTester(AbstractSchemaTester, ABC):
+    schema_instance_with_pre_defined: ClassVar[BaseSchema]
+
+    @abstractmethod
+    def test_schema_with_pre_defined(self):
+        ...
