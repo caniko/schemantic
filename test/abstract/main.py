@@ -1,25 +1,20 @@
 from abc import ABC
 from copy import deepcopy
 from functools import cached_property
+from test.abstract.base import AbstractNotCulturalTesterMixin, AbstractSchemaTester
+from test.schema.base import OtherTestModel, TestModel
+from test.schema.pre_defined import HOMOLOG_PRE_DEFINITION, SINGLE_PRE_DEFINITION
+from typing import Any, ClassVar
 
 from ordered_set import OrderedSet
-
-from schemantic import HomologSchema, GroupSchema, SingleSchema
-from test.abstract.base import AbstractSchemaTester, AbstractNotCulturalTester
-from typing import ClassVar, Any
-
 from parameterized import parameterized
 
-from schemantic.utils.constant import (
-    SCHEMA_DEFINED_MAPPING_KEY,
-    SCHEMA_REQUIRED_MAPPING_KEY,
-    SCHEMA_OPTIONAL_MAPPING_KEY,
-)
-from test.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
-from test.schema.pre_defined import SINGLE_PRE_DEFINITION, HOMOLOG_PRE_DEFINITION, group_pre_definition
+from schemantic import CultureSchema, GroupSchema, HomologSchema, SingleSchema
+from schemantic.utils.constant import SCHEMA_DEFINED_MAPPING_KEY, SCHEMA_OPTIONAL_MAPPING_KEY
 
 
-class AbstractTestSingle(AbstractNotCulturalTester, ABC):
+class AbstractTestSingle(AbstractNotCulturalTesterMixin, AbstractSchemaTester, ABC):
+    schema_instance: ClassVar[SingleSchema]
     instance_configuration = {"must_be": 5, "we": "must_work"}
 
     @cached_property
@@ -44,11 +39,12 @@ class AbstractTestSingle(AbstractNotCulturalTester, ABC):
     def test_parse_schema(self):
         self.assertEqual(
             self.schema_instance.parse_schema(self.schema_with_instance_configuration),
-            {self.schema_instance.mapping_name: self.instance_configuration},
+            self.instance_configuration,
         )
 
 
-class AbstractTestHomolog(AbstractNotCulturalTester, ABC):
+class AbstractTestHomolog(AbstractSchemaTester, AbstractNotCulturalTesterMixin, ABC):
+    schema_instance: ClassVar[HomologSchema]
     instance_configuration = dict(
         common={"must_be": 10},
         test_1={"we": "are_friends"},
@@ -99,7 +95,8 @@ class AbstractTestHomolog(AbstractNotCulturalTester, ABC):
         )
 
 
-class AbstractTestGroup(AbstractNotCulturalTester, ABC):
+class AbstractTestGroup(AbstractNotCulturalTesterMixin, AbstractSchemaTester, ABC):
+    schema_instance: ClassVar[GroupSchema]
     pre_defined_map: ClassVar[dict[str, dict[str, Any]]]
 
     @cached_property
@@ -141,6 +138,7 @@ class AbstractTestGroup(AbstractNotCulturalTester, ABC):
 
 
 class AbstractTestCulture(AbstractSchemaTester, ABC):
+    schema_instance: ClassVar[CultureSchema]
     single_schema_instance: ClassVar[SingleSchema]
     homolog_schema_instance: ClassVar[HomologSchema]
     group_schema_instance: ClassVar[GroupSchema]
@@ -201,12 +199,28 @@ class AbstractTestCulture(AbstractSchemaTester, ABC):
 
     def test_parse_schema(self):
         self.assertEqual(
-            self.schema_instance.parse_schema(self.schema_with_instance_configuration),
+            self.schema_instance.parse_schema(self.schema_with_instance_configuration, keep_mapping_names=False),
             {
-                self.single_schema_instance.mapping_name: self.single_schema_config,
+                self.single_schema_instance.origin.__name__: self.single_schema_config,
                 "test_1": self.homolog_test_1_config,
                 "test_2": self.homolog_test_2_config,
-                self._other_test_class.__name__: self.group_other_test_config,
                 self._test_class.__name__: self.group_test_config,
+                self._other_test_class.__name__: self.group_other_test_config,
+            },
+        )
+
+    def test_parse_schema_keep_mapping_names(self):
+        self.assertEqual(
+            self.schema_instance.parse_schema(self.schema_with_instance_configuration, keep_mapping_names=True),
+            {
+                self.single_schema_instance.mapping_name: self.single_schema_config,
+                self.homolog_schema_instance.mapping_name: {
+                    "test_1": self.homolog_test_1_config,
+                    "test_2": self.homolog_test_2_config,
+                },
+                self.group_schema_instance.mapping_name: {
+                    self._test_class.__name__: self.group_test_config,
+                    self._other_test_class.__name__: self.group_other_test_config,
+                },
             },
         )

@@ -97,11 +97,30 @@ class SingleSchema(SingleHomologousSchema, Generic[T]):
         defined_schema = self._make_sure_defined_schema_is_loaded(defined_schema)
 
         config_from_file = self._get_configuration_from_mapping(defined_schema, stored_in_defined=True)
-        return {
-            self.mapping_name: {**_inferior_config_kwargs, **config_from_file}
-            if _inferior_config_kwargs
-            else config_from_file
-        }
+        if not _inferior_config_kwargs:
+            return config_from_file
+        return {**_inferior_config_kwargs, **config_from_file}
+
+    @validate_call
+    def parse_schema_to_instance(
+        self,
+        defined_schema: DefinedSchema,
+        *,
+        _inferior_config_kwargs: Optional[dict[str, Any]] = None,
+    ) -> dict[str, T]:
+        """
+        Note that SingleSchema uses its sole mapping_name as name here; dict with a single key-value pair
+
+        Parameters
+        ----------
+        defined_schema
+        _inferior_config_kwargs
+
+        Returns
+        -------
+
+        """
+        return {self.mapping_name: self.origin(**self.parse_schema(defined_schema))}
 
 
 class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
@@ -227,6 +246,29 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
             )
 
         return result
+
+    @validate_call
+    def parse_schema_to_instance(
+            self,
+            defined_schema: DefinedSchema,
+            *,
+            _inferior_config_kwargs: Optional[dict[str, Any]] = None,
+    ) -> dict[str, T]:
+        """
+        Note that SingleSchema uses its sole mapping_name as name here; dict with a single key-value pair
+
+        Parameters
+        ----------
+        defined_schema
+        _inferior_config_kwargs
+
+        Returns
+        -------
+
+        """
+        return {
+            name: self.origin(**instance_kwargs) for name, instance_kwargs in self.parse_schema(defined_schema).items()
+        }
 
     @classmethod
     def from_originating_type(
@@ -523,13 +565,21 @@ class CultureSchema(BaseSchema):
         return result
 
     @validate_call
-    def parse_schema(self, defined_schema: DefinedSchema) -> dict[str, dict[str, Any]]:
+    def parse_schema(self, defined_schema: DefinedSchema, keep_mapping_names: bool = True) -> dict[str, dict[str, Any]]:
         defined_schema = self._make_sure_defined_schema_is_loaded(defined_schema)
         result = {}
 
         for model_schema in self.source_schemas:
             parsed = model_schema.parse_schema(defined_schema[model_schema.mapping_name])
-            update_assert_disjoint(result, parsed, f"{model_schema.mapping_name} collides with the existing parsimony.")
+            if keep_mapping_names:
+                result[model_schema.mapping_name] = parsed
+            else:
+                if isinstance(model_schema, SingleSchema):
+                    result[model_schema.origin.__name__] = parsed
+                else:
+                    update_assert_disjoint(
+                        result, parsed, f"{model_schema.mapping_name} collides with the existing parsimony."
+                    )
 
         return result
 
@@ -539,7 +589,10 @@ class CultureSchema(BaseSchema):
 
         result = {}
         for model_schema in self.source_schemas:
-            parsed = model_schema.parse_schema_to_instance(defined_schema[model_schema.mapping_name])
-            update_assert_disjoint(result, parsed, f"{model_schema.mapping_name} collides with the existing parsimony.")
+            update_assert_disjoint(
+                result,
+                model_schema.parse_schema_to_instance(defined_schema[model_schema.mapping_name]),
+                f"{model_schema.mapping_name} collides with the existing parsimony.",
+            )
 
         return result

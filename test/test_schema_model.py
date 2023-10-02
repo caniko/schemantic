@@ -1,13 +1,13 @@
 import unittest
+from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from test.schema.bare import model_culture_schema, model_group_schema, model_homolog_schema, model_single_schema
-from test.schema.base import TestModel, OtherTestModel
+from test.schema.base import OtherTestModel, TestModel
 from test.schema.pre_defined import (
+    model_group_pre_definitions,
     model_group_with_pre_def_schema,
     model_homolog_with_pre_def_schema,
     model_single_with_pre_def_schema,
-    model_group_pre_definitions,
 )
-from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from typing import ClassVar, Type
 
 from schemantic.utils.constant import (

@@ -1,7 +1,7 @@
 import tempfile
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 from parameterized import parameterized
 
@@ -9,8 +9,6 @@ from schemantic.schema.abstract import BaseSchema
 
 
 class AbstractSchemaTester(ABC):
-    schema_instance: ClassVar[BaseSchema]
-
     expected_schema: ClassVar[dict]
     instance_configuration: ClassVar[dict]
 
@@ -45,7 +43,7 @@ class AbstractSchemaTester(ABC):
             self.assertEqual(self.schema_instance.load(schema_path), self.expected_schema)
 
 
-class AbstractNotCulturalTester(AbstractSchemaTester, ABC):
+class AbstractNotCulturalTesterMixin(ABC):
     schema_instance_with_pre_defined: ClassVar[BaseSchema]
 
     @abstractmethod
