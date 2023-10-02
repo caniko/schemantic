@@ -121,29 +121,6 @@ class SingleHomologousSchema(NotCultureSchema, ABC):
     def mapping_name(self) -> str:
         ...
 
-    @validate_call
-    def parse_schema_to_instance(
-        self,
-        defined_schema: DefinedSchema,
-        *,
-        _inferior_config_kwargs: Optional[dict[str, Any]] = None,
-    ) -> dict[str, Any]:
-        """
-        Note that SingleSchema uses its sole mapping_name as name here; dict with a single key-value pair
-
-        Parameters
-        ----------
-        defined_schema
-        _inferior_config_kwargs
-
-        Returns
-        -------
-
-        """
-        return {
-            name: self.origin(**instance_kwargs) for name, instance_kwargs in self.parse_schema(defined_schema).items()
-        }
-
 
 class HomologousGroupMixin(BaseModel, ABC):
     pre_definitions: dict[str, dict[str, Any]] | None = None

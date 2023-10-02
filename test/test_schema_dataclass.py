@@ -1,19 +1,18 @@
 import unittest
+from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from test.schema.bare import (
     dataclass_culture_schema,
     dataclass_group_schema,
     dataclass_homolog_schema,
     dataclass_single_schema,
 )
-from test.schema.base import TestDataclass, OtherTestDataclass
+from test.schema.base import OtherTestDataclass, TestDataclass
 from test.schema.pre_defined import (
+    dataclass_group_pre_definitions,
     dataclass_group_with_pre_def_schema,
     dataclass_homolog_with_pre_def_schema,
     dataclass_single_with_pre_def_schema,
-    dataclass_group_pre_definitions,
-    class_group_pre_definitions,
 )
-from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
 from typing import ClassVar, Type
 
 from schemantic.utils.constant import (

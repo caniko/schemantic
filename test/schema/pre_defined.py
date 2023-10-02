@@ -1,6 +1,4 @@
 from copy import deepcopy
-from functools import lru_cache
-
 from test.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
 from typing import Any
 
