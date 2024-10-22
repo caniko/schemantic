@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "schemantic"
-version = "1.0.0"
+version = "2.0.2"
 description = "Manipulate model schemas utilizing homologous, grouped, or cultured paradigms"
 authors = ["caniko <python@rotas.mozmail.com>"]
 license = "BSD-4"
@@ -28,11 +28,10 @@ line_length = 120
 
 [tool.black]
 line-length = 120
-target-version = ["py311"]
+target-version = ["py312"]
 
 [tool.ruff]
 line-length = 120
-ignore-init-module-imports = true
 
 [build-system]
 requires = ["poetry-core"]
