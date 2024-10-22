@@ -1,4 +1,4 @@
-from typing import Any, Hashable, Optional
+from typing import Any, Optional, TypeVar
 
 
 def update_assert_disjoint(dict_a: dict, dict_b: dict, error_msg_add: Optional[str] = None) -> None:
@@ -17,9 +17,12 @@ def update_assert_disjoint(dict_a: dict, dict_b: dict, error_msg_add: Optional[s
     dict_a.update(dict_b)
 
 
-def sorted_by_dict_key(source: dict[Hashable, Any]) -> list[tuple[Hashable, Any]]:
-    return sorted(source.items(), key=lambda kv: kv[0])
+T = TypeVar("T")
+
+
+def extract_sort_keys(source: dict[T, Any]) -> list[T]:
+    return sorted(source.keys())
 
 
 def dict_sorted_by_dict_key(source: dict) -> dict:
-    return dict(sorted_by_dict_key(source))
+    return dict(sorted(source.items(), key=lambda kv: kv[0]))

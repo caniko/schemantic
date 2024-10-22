@@ -1,4 +1,5 @@
-
+install:
+    poetry install -E toml -E yaml
 
 format:
 	black .
@@ -6,8 +7,5 @@ format:
 	ruff check . --fix
 	@echo "Formatting complete 🎉"
 
-mypy:
-	mypy --ignore-missing-imports \
-	--follow-imports=skip \
-	--strict-optional \
-	-p schemantic
+tcheck:
+	poetry run pyright schemantic
