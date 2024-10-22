@@ -1,2 +1,2 @@
 from .project import SchemanticProjectMixin, SchemanticProjectModelMixin
-from .schema import CultureSchema, GroupSchema, HomologSchema, SingleSchema
+from .schema import CultureSchema, GroupSchema, HomologueSchema, SingleSchema

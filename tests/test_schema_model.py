@@ -1,8 +1,8 @@
 import unittest
-from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
-from test.schema.bare import model_culture_schema, model_group_schema, model_homolog_schema, model_single_schema
-from test.schema.base import OtherTestModel, TestModel
-from test.schema.pre_defined import (
+from tests.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
+from tests.schema.bare import model_culture_schema, model_group_schema, model_homolog_schema, model_single_schema
+from tests.schema.base import OtherTestModel, TestModel
+from tests.schema.pre_defined import (
     model_group_pre_definitions,
     model_group_with_pre_def_schema,
     model_homolog_with_pre_def_schema,

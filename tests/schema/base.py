@@ -20,10 +20,9 @@ class TestClass(SchemanticProjectMixin):
         pass
 
     @classmethod
-    @property
     def fields_to_exclude_from_single_schema(cls) -> set[str]:
-        upstream = super().fields_to_exclude_from_single_schema
-        upstream.update(("exclude_me",))
+        upstream = super().fields_to_exclude_from_single_schema()
+        upstream.add("exclude_me")
         return upstream
 
 
@@ -45,10 +44,9 @@ class TestDataclass(SchemanticProjectMixin):
     _exclude_me_too: Optional[float] = None
 
     @classmethod
-    @property
     def fields_to_exclude_from_single_schema(cls) -> set[str]:
-        upstream = super().fields_to_exclude_from_single_schema
-        upstream.update(("exclude_me",))
+        upstream = super().fields_to_exclude_from_single_schema()
+        upstream.add("exclude_me")
         return upstream
 
 
@@ -68,12 +66,10 @@ class TestModel(SchemanticProjectModelMixin, BaseModel):
     exclude_me: Optional[int] = None
     _exclude_me_too: Optional[float] = None
 
-    @classmethod  # type: ignore[misc]
-    @computed_field(return_type=set[str])
-    @property
+    @classmethod
     def fields_to_exclude_from_single_schema(cls) -> set[str]:
-        upstream = super().fields_to_exclude_from_single_schema
-        upstream.update(("exclude_me",))
+        upstream = super().fields_to_exclude_from_single_schema()
+        upstream.add("exclude_me")
         return upstream
 
 

@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, ClassVar, Optional
 
 from pydantic import BaseModel, FilePath, computed_field, validate_call
+from typing_extensions import Annotated, Doc, TypeAlias
 
 from schemantic.utils.constant import (
     SCHEMA_DEFINED_MAPPING_KEY,
@@ -13,8 +14,11 @@ from schemantic.utils.constant import (
 from schemantic.utils.typing import DefinedSchema
 
 
-class BaseSchema(BaseModel, ABC, arbitrary_types_allowed=True):
-    prohibited_keys: ClassVar[set[str]] = set()
+ProhibitedKeys: TypeAlias = ClassVar[Annotated[set[str], Doc("Keys that should not be parsed")]]
+
+
+class AbstractSchema(BaseModel, ABC, arbitrary_types_allowed=True):
+    prohibited_keys: ProhibitedKeys = set()
 
     @abstractmethod
     def schema(self, *args, **kwargs):
@@ -65,9 +69,7 @@ class BaseSchema(BaseModel, ABC, arbitrary_types_allowed=True):
                 msg = f"{schema_path.suffix} is unsupported"
                 raise NotImplementedError(msg)
 
-    @classmethod  # type: ignore[misc]
-    @computed_field(return_type=set[str])
-    @property
+    @classmethod
     def _keys_to_not_parse(cls) -> set[str]:
         result = copy(cls.prohibited_keys) if cls.prohibited_keys else set()
         result.update((SCHEMA_REQUIRED_MAPPING_KEY, SCHEMA_OPTIONAL_MAPPING_KEY))
@@ -79,19 +81,8 @@ class BaseSchema(BaseModel, ABC, arbitrary_types_allowed=True):
             defined_schema = self.load(defined_schema)
         return defined_schema
 
-    @validate_call
-    def _get_configuration_from_mapping(self, source: dict, *, stored_in_defined: bool) -> dict[str, Any]:
-        try:
-            result = source[self.mapping_name]
-        except KeyError:
-            # The provided schema may be a shallow definition;
-            # no self.mapping_name resolution needed.
-            result = source
 
-        return result[SCHEMA_DEFINED_MAPPING_KEY] if stored_in_defined else result
-
-
-class NotCultureSchema(BaseSchema, ABC):
+class AbstractSingleHomologousGroupSchema(AbstractSchema, ABC):
     pre_definitions: dict | None
 
     @abstractmethod
@@ -112,8 +103,19 @@ class NotCultureSchema(BaseSchema, ABC):
     ):
         ...
 
+    @validate_call
+    def _get_configuration_from_mapping(self, source: dict, *, stored_in_defined: bool) -> dict[str, Any]:
+        try:
+            result = source[self.mapping_name]
+        except KeyError:
+            # The provided schema may be a shallow definition;
+            # no self.mapping_name resolution needed.
+            result = source
 
-class SingleHomologousSchema(NotCultureSchema, ABC):
+        return result[SCHEMA_DEFINED_MAPPING_KEY] if stored_in_defined else result
+
+
+class AbstractSingleHomologousSchema(AbstractSingleHomologousGroupSchema, ABC):
     schema_alias: Optional[str] = None
 
     @property

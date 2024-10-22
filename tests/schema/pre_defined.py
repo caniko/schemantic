@@ -1,10 +1,10 @@
 from copy import deepcopy
-from test.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
+from tests.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
 from typing import Any
 
 from ordered_set import OrderedSet
 
-from schemantic import GroupSchema, HomologSchema, SingleSchema
+from schemantic import GroupSchema, HomologueSchema, SingleSchema
 
 SINGLE_PRE_DEFINITION = dict(new_age=3)
 HOMOLOG_PRE_DEFINITION = dict(test_1=dict(new_age=4))
@@ -22,7 +22,7 @@ model_group_pre_definitions = group_pre_definition(TestModel, OtherTestModel)
 class_single_with_pre_def_schema = SingleSchema(
     origin=TestClass, schema_alias="single_test", pre_definitions=SINGLE_PRE_DEFINITION
 )
-class_homolog_with_pre_def_schema = HomologSchema(
+class_homolog_with_pre_def_schema = HomologueSchema(
     single_schema=deepcopy(class_single_with_pre_def_schema),
     instance_names=OrderedSet(("test_1", "test_2")),
     schema_alias="homolog_test",
@@ -38,7 +38,7 @@ class_group_with_pre_def_schema = GroupSchema.from_originating_types(
 dataclass_single_with_pre_def_schema = SingleSchema(
     origin=TestDataclass, schema_alias="single_test", pre_definitions=SINGLE_PRE_DEFINITION
 )
-dataclass_homolog_with_pre_def_schema = HomologSchema(
+dataclass_homolog_with_pre_def_schema = HomologueSchema(
     single_schema=deepcopy(dataclass_single_with_pre_def_schema),
     instance_names=OrderedSet(("test_1", "test_2")),
     schema_alias="homolog_test",
@@ -54,7 +54,7 @@ dataclass_group_with_pre_def_schema = GroupSchema.from_originating_types(
 model_single_with_pre_def_schema = SingleSchema(
     origin=TestModel, schema_alias="single_test", pre_definitions=SINGLE_PRE_DEFINITION
 )
-model_homolog_with_pre_def_schema = HomologSchema(
+model_homolog_with_pre_def_schema = HomologueSchema(
     single_schema=deepcopy(model_single_with_pre_def_schema),
     instance_names=OrderedSet(("test_1", "test_2")),
     schema_alias="homolog_test",
