@@ -5,7 +5,7 @@ from typing import ClassVar
 
 from parameterized import parameterized
 
-from schemantic.schema.abstract import BaseSchema
+from schemantic.schema.abstract import AbstractSchema
 
 
 class AbstractSchemaTester(ABC):
@@ -44,7 +44,7 @@ class AbstractSchemaTester(ABC):
 
 
 class AbstractNotCulturalTesterMixin(ABC):
-    schema_instance_with_pre_defined: ClassVar[BaseSchema]
+    schema_instance_with_pre_defined: ClassVar[AbstractSchema]
 
     @abstractmethod
     def test_schema_with_pre_defined(self):

@@ -1,17 +1,12 @@
 import unittest
-from test.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
-from test.schema.bare import (
-    dataclass_culture_schema,
-    dataclass_group_schema,
-    dataclass_homolog_schema,
-    dataclass_single_schema,
-)
-from test.schema.base import OtherTestDataclass, TestDataclass
-from test.schema.pre_defined import (
-    dataclass_group_pre_definitions,
-    dataclass_group_with_pre_def_schema,
-    dataclass_homolog_with_pre_def_schema,
-    dataclass_single_with_pre_def_schema,
+from tests.abstract.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomolog, AbstractTestSingle
+from tests.schema.bare import class_culture_schema, class_group_schema, class_homolog_schema, class_single_schema
+from tests.schema.base import OtherTestClass, TestClass
+from tests.schema.pre_defined import (
+    class_group_pre_definitions,
+    class_group_with_pre_def_schema,
+    class_homolog_with_pre_def_schema,
+    class_single_with_pre_def_schema,
 )
 from typing import ClassVar, Type
 
@@ -23,36 +18,36 @@ from schemantic.utils.constant import (
 )
 
 
-class WithDataclassMixin:
-    _test_class: ClassVar[Type] = TestDataclass
-    _other_test_class: ClassVar[Type] = OtherTestDataclass
+class WithClassMixin:
+    _test_class: ClassVar[Type] = TestClass
+    _other_test_class: ClassVar[Type] = OtherTestClass
 
     def test_parse_schema_to_instance(self):
         self.assertTrue(self.schema_instance.parse_schema_to_instance(self.schema_with_instance_configuration))
 
 
-class TestSingleWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestSingle):
-    schema_instance = dataclass_single_schema
-    schema_instance_with_pre_defined = dataclass_single_with_pre_def_schema
+class TestSingleWithCLS(unittest.TestCase, WithClassMixin, AbstractTestSingle):
+    schema_instance = class_single_schema
+    schema_instance_with_pre_defined = class_single_with_pre_def_schema
 
     expected_schema = {
-        "class_name": "TestDataclass",
+        "class_name": "TestClass",
         SCHEMA_OPTIONAL_MAPPING_KEY: {
             "age": "int",
             "n": "NoneType",
             "new_age": "Any[int, str]",
-            "we": "str(default: TestDataclass -> n)",
+            "we": "str(default: TestClass -> n)",
         },
         SCHEMA_REQUIRED_MAPPING_KEY: {"must_be": "int"},
     }
 
 
-class TestHomologWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestHomolog):
-    schema_instance = dataclass_homolog_schema
-    schema_instance_with_pre_defined = dataclass_homolog_with_pre_def_schema
+class TestHomologWithCLS(unittest.TestCase, WithClassMixin, AbstractTestHomolog):
+    schema_instance = class_homolog_schema
+    schema_instance_with_pre_defined = class_homolog_with_pre_def_schema
 
     expected_schema = {
-        "class_name": "TestDataclass",
+        "class_name": "TestClass",
         "common": {},
         "test_1": {},
         "test_2": {},
@@ -63,16 +58,16 @@ class TestHomologWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTe
             "age": "int",
             "n": "NoneType",
             "new_age": "Any[int, str]",
-            "we": "str(default: TestDataclass -> n)",
+            "we": "str(default: TestClass -> n)",
         },
     }
 
 
-class TestGroupWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestGroup):
-    schema_instance = dataclass_group_schema
-    schema_instance_with_pre_defined = dataclass_group_with_pre_def_schema
+class TestGroupWithCLS(unittest.TestCase, WithClassMixin, AbstractTestGroup):
+    schema_instance = class_group_schema
+    schema_instance_with_pre_defined = class_group_with_pre_def_schema
 
-    pre_defined_map = dataclass_group_pre_definitions
+    pre_defined_map = class_group_pre_definitions
 
     expected_schema = {
         "common": {
@@ -80,14 +75,14 @@ class TestGroupWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTest
             SCHEMA_REQUIRED_MAPPING_KEY: ["must_be"],
             SCHEMA_OPTIONAL_MAPPING_KEY: ["age", "n", "new_age", "we"],
         },
-        "TestDataclass": {
-            "class_name": "TestDataclass",
+        "TestClass": {
+            "class_name": "TestClass",
             SCHEMA_DEFINED_MAPPING_KEY: {},
             SCHEMA_REQUIRED_MAPPING_KEY: ["must_be"],
             SCHEMA_OPTIONAL_MAPPING_KEY: ["age", "n", "new_age", "we"],
         },
-        "OtherTestDataclass": {
-            "class_name": "OtherTestDataclass",
+        "OtherTestClass": {
+            "class_name": "OtherTestClass",
             SCHEMA_DEFINED_MAPPING_KEY: {},
             SCHEMA_OPTIONAL_MAPPING_KEY: ["we"],
         },
@@ -96,27 +91,27 @@ class TestGroupWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTest
             "must_be": "int",
             "n": "NoneType",
             "new_age": "Any[int, str]",
-            "we": "str(default: OtherTestDataclass -> n; TestDataclass -> n)",
+            "we": "str(default: OtherTestClass -> n; TestClass -> n)",
         },
     }
 
 
-class TestCultureWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTestCulture):
-    single_schema_instance = dataclass_single_schema
-    homolog_schema_instance = dataclass_homolog_schema
-    group_schema_instance = dataclass_group_schema
+class TestCultureWithCLS(unittest.TestCase, WithClassMixin, AbstractTestCulture):
+    single_schema_instance = class_single_schema
+    homolog_schema_instance = class_homolog_schema
+    group_schema_instance = class_group_schema
 
-    schema_instance = dataclass_culture_schema
+    schema_instance = class_culture_schema
 
     expected_schema = {
         "single_test": {
-            "class_name": "TestDataclass",
+            "class_name": "TestClass",
             SCHEMA_DEFINED_MAPPING_KEY: {},
             SCHEMA_REQUIRED_MAPPING_KEY: ["must_be"],
             SCHEMA_OPTIONAL_MAPPING_KEY: ["age", "n", "new_age", "we"],
         },
         "homolog_test": {
-            "class_name": "TestDataclass",
+            "class_name": "TestClass",
             "common": {},
             "test_1": {},
             "test_2": {},
@@ -129,14 +124,14 @@ class TestCultureWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTe
                 SCHEMA_REQUIRED_MAPPING_KEY: ["must_be"],
                 SCHEMA_OPTIONAL_MAPPING_KEY: ["age", "n", "new_age", "we"],
             },
-            "TestDataclass": {
-                "class_name": "TestDataclass",
+            "TestClass": {
+                "class_name": "TestClass",
                 SCHEMA_DEFINED_MAPPING_KEY: {},
                 SCHEMA_REQUIRED_MAPPING_KEY: ["must_be"],
                 SCHEMA_OPTIONAL_MAPPING_KEY: ["age", "n", "new_age", "we"],
             },
-            "OtherTestDataclass": {
-                "class_name": "OtherTestDataclass",
+            "OtherTestClass": {
+                "class_name": "OtherTestClass",
                 SCHEMA_DEFINED_MAPPING_KEY: {},
                 SCHEMA_OPTIONAL_MAPPING_KEY: ["we"],
             },
@@ -146,6 +141,6 @@ class TestCultureWithDataclass(unittest.TestCase, WithDataclassMixin, AbstractTe
             "must_be": "int",
             "n": "NoneType",
             "new_age": "Any[int, str]",
-            "we": "str(default: OtherTestDataclass -> n; TestDataclass -> n)",
+            "we": "str(default: OtherTestClass -> n; TestClass -> n)",
         },
     }

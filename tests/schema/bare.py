@@ -1,12 +1,12 @@
 from copy import deepcopy
-from test.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
+from tests.schema.base import OtherTestClass, OtherTestDataclass, OtherTestModel, TestClass, TestDataclass, TestModel
 
 from ordered_set import OrderedSet
 
-from schemantic.schema.main import CultureSchema, GroupSchema, HomologSchema, SingleSchema
+from schemantic.schema.main import CultureSchema, GroupSchema, HomologueSchema, SingleSchema
 
 class_single_schema = SingleSchema(origin=TestClass, schema_alias="single_test")
-class_homolog_schema = HomologSchema(
+class_homolog_schema = HomologueSchema(
     single_schema=deepcopy(class_single_schema),
     instance_names=OrderedSet(("test_1", "test_2")),
     schema_alias="homolog_test",
@@ -22,7 +22,7 @@ class_culture_schema = CultureSchema(
 
 
 dataclass_single_schema = SingleSchema(origin=TestDataclass, schema_alias="single_test")
-dataclass_homolog_schema = HomologSchema(
+dataclass_homolog_schema = HomologueSchema(
     single_schema=deepcopy(dataclass_single_schema),
     instance_names=OrderedSet(("test_1", "test_2")),
     schema_alias="homolog_test",
@@ -38,7 +38,7 @@ dataclass_culture_schema = CultureSchema(
 
 
 model_single_schema = SingleSchema(origin=TestModel, schema_alias="single_test")
-model_homolog_schema = HomologSchema(
+model_homolog_schema = HomologueSchema(
     single_schema=deepcopy(model_single_schema),
     instance_names=OrderedSet(("test_1", "test_2")),
     schema_alias="homolog_test",

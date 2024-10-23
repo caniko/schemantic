@@ -1,15 +1,15 @@
 from abc import ABC
 from copy import deepcopy
 from functools import cached_property
-from test.abstract.base import AbstractNotCulturalTesterMixin, AbstractSchemaTester
-from test.schema.base import OtherTestModel, TestModel
-from test.schema.pre_defined import HOMOLOG_PRE_DEFINITION, SINGLE_PRE_DEFINITION
+from tests.abstract.base import AbstractNotCulturalTesterMixin, AbstractSchemaTester
+from tests.schema.base import OtherTestModel, TestModel
+from tests.schema.pre_defined import HOMOLOG_PRE_DEFINITION, SINGLE_PRE_DEFINITION
 from typing import Any, ClassVar
 
 from ordered_set import OrderedSet
 from parameterized import parameterized
 
-from schemantic import CultureSchema, GroupSchema, HomologSchema, SingleSchema
+from schemantic import CultureSchema, GroupSchema, HomologueSchema, SingleSchema
 from schemantic.utils.constant import SCHEMA_DEFINED_MAPPING_KEY, SCHEMA_OPTIONAL_MAPPING_KEY
 
 
@@ -44,7 +44,7 @@ class AbstractTestSingle(AbstractNotCulturalTesterMixin, AbstractSchemaTester, A
 
 
 class AbstractTestHomolog(AbstractSchemaTester, AbstractNotCulturalTesterMixin, ABC):
-    schema_instance: ClassVar[HomologSchema]
+    schema_instance: ClassVar[HomologueSchema]
     instance_configuration = dict(
         common={"must_be": 10},
         test_1={"we": "are_friends"},
@@ -64,18 +64,18 @@ class AbstractTestHomolog(AbstractSchemaTester, AbstractNotCulturalTesterMixin, 
 
     def test_from_originating_type(self):
         self.assertTrue(
-            HomologSchema.from_originating_type(
+            HomologueSchema.from_originating_type(
                 origin=self.schema_instance.single_schema.origin, instance_names=OrderedSet(("MyName", "My2ndName"))
             )
         )
 
     def test_name_instances_and_name_getter_undefined(self):
         with self.assertRaises(AttributeError):
-            HomologSchema.from_originating_type(origin=self.schema_instance.single_schema.origin)
+            HomologueSchema.from_originating_type(origin=self.schema_instance.single_schema.origin)
 
     def test_must_have_more_than_one_instance(self):
         with self.assertRaises(ValueError):
-            HomologSchema.from_originating_type(
+            HomologueSchema.from_originating_type(
                 origin=self.schema_instance.single_schema.origin, instance_names=OrderedSet(("MyName",))
             )
 
@@ -140,7 +140,7 @@ class AbstractTestGroup(AbstractNotCulturalTesterMixin, AbstractSchemaTester, AB
 class AbstractTestCulture(AbstractSchemaTester, ABC):
     schema_instance: ClassVar[CultureSchema]
     single_schema_instance: ClassVar[SingleSchema]
-    homolog_schema_instance: ClassVar[HomologSchema]
+    homolog_schema_instance: ClassVar[HomologueSchema]
     group_schema_instance: ClassVar[GroupSchema]
 
     @cached_property

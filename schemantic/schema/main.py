@@ -1,14 +1,16 @@
 from collections.abc import Mapping, Set
 from functools import cached_property
-from typing import Any, Callable, Generic, Iterable, Optional, Type, TypeVar
+from typing import Any, Callable, Generic, Iterable, Optional, Type, TypeVar, TypeAlias
 
 from ordered_set import OrderedSet
-from pydantic import BaseModel, computed_field, field_validator, model_validator, validate_call
+from pydantic import BaseModel, field_validator, model_validator, validate_call
+from typing_extensions import Self
 
 from schemantic.model.field_info import FieldMetadata, class_field_alias_to_type_string, model_field_alias_to_field_info
 from schemantic.model.schematic import Schematic
 from schemantic.project import SchemanticProjectMixin
-from schemantic.schema.abstract import BaseSchema, HomologousGroupMixin, NotCultureSchema, SingleHomologousSchema
+from schemantic.schema.abstract import AbstractSchema, HomologousGroupMixin, AbstractSingleHomologousGroupSchema, AbstractSingleHomologousSchema, \
+    ProhibitedKeys
 from schemantic.utils.constant import (
     SCHEMA_DEFINED_MAPPING_KEY,
     SCHEMA_FIELD_INFO_MAPPING_KEY,
@@ -27,7 +29,7 @@ from schemantic.utils.typing import (
 T = TypeVar("T")
 
 
-class SingleSchema(SingleHomologousSchema, Generic[T]):
+class SingleSchema(AbstractSingleHomologousSchema, Generic[T]):
     """
     Used to define the schema of a single class or model.
 
@@ -46,17 +48,15 @@ class SingleSchema(SingleHomologousSchema, Generic[T]):
             return False
         return self.origin == other.origin
 
-    @computed_field(return_type=str)  # type: ignore[misc]
     @property
     def mapping_name(self) -> str:
         return self.schema_alias or self.origin.__name__
 
-    @computed_field(return_type=Schematic)  # type: ignore[misc]
     @cached_property
     def schematic(self) -> Schematic:
         kwargs = {}
         if issubclass(self.origin, SchemanticProjectMixin):
-            kwargs.update(self.origin.single_schema_kwargs)
+            kwargs.update(self.origin.single_schema_kwargs())
 
         required_optional_to_field_to_info = (
             model_field_alias_to_field_info(self.origin, **kwargs)
@@ -123,7 +123,7 @@ class SingleSchema(SingleHomologousSchema, Generic[T]):
         return {self.mapping_name: self.origin(**self.parse_schema(defined_schema))}
 
 
-class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
+class HomologueSchema(HomologousGroupMixin, AbstractSingleHomologousSchema, Generic[T]):
     """
     Represents a schema with multiple instances of the same origin, but are uniquely
     identified by their names. This is often useful in situations where you have
@@ -142,7 +142,7 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
     instance_names: Optional[OrderedSet[str]] = None
     name_getter: Optional[Callable[[...], OrderedSet[str]]] = None
 
-    prohibited_keys = {"class_name", "common", SCHEMA_DEFINED_MAPPING_KEY, SCHEMA_FIELD_INFO_MAPPING_KEY}
+    prohibited_keys: ProhibitedKeys = {"class_name", "common", SCHEMA_DEFINED_MAPPING_KEY, SCHEMA_FIELD_INFO_MAPPING_KEY}
 
     def __hash__(self):
         return hash(self.single_schema)
@@ -151,7 +151,7 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
     def instance_names_or_name_getter(cls, data):
         if not (data["instance_names"] or data["name_getter"]):
             msg = (
-                f"Either instance_names or name_getter has to be defined in order to define homolog instances. "
+                f"Either instance_names or name_getter has to be defined in order to define homologue instances. "
                 f"Use {SingleSchema.__name__} instead if there are no homologous instances, but single instance"
             )
             raise AttributeError(msg)
@@ -164,25 +164,23 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
 
         if len(model.instance_names) == 1:
             msg = (
-                "There is no possibility to generate more than one homolog given there is no name_getter defined, "
+                "There is no possibility to generate more than one homologue given there is no name_getter defined, "
                 "and instance_names only has a single name"
             )
             raise ValueError(msg)
 
         return model
 
-    @computed_field(return_type=Type[T])  # type: ignore[misc]
     @property
     def origin(self) -> Type[T]:
         return self.single_schema.origin
 
-    @computed_field(return_type=str)  # type: ignore[misc]
     @property
     def mapping_name(self) -> str:
         return self.schema_alias or self.single_schema.mapping_name
 
     @validate_call
-    def homolog_names(self, name_getter_kwargs: Optional[Mapping[str, Any]] = None) -> OrderedSet[str]:
+    def homologue_names(self, name_getter_kwargs: Optional[Mapping[str, Any]] = None) -> OrderedSet[str]:
         """
         Collect all names by combining instance names and the callback from the name_getter
 
@@ -200,10 +198,10 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
             if not self.name_getter or not name_getter_kwargs
             else OrderedSet((*self.name_getter(**name_getter_kwargs), *self.instance_names))
         )
-        if self._keys_to_not_parse and any(name in self._keys_to_not_parse for name in result):
+        if self._keys_to_not_parse() and any(name in self._keys_to_not_parse() for name in result):
             msg = (
-                f"The names {self._keys_to_not_parse.intersection(result)} are not allowed. "
-                f"Set of names that cannot be used: {self._keys_to_not_parse}"
+                f"The names {self._keys_to_not_parse().intersection(result)} are not allowed. "
+                f"Set of names that cannot be used: {self._keys_to_not_parse()}"
             )
             raise AttributeError(msg)
 
@@ -217,7 +215,7 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
         if with_common:
             result["common"] = {}
 
-        for name in self.homolog_names(name_getter_kwargs):
+        for name in self.homologue_names(name_getter_kwargs):
             result[name] = self.pre_definitions[name] if self.pre_definitions and name in self.pre_definitions else {}
 
         result.update(self.single_schema.schematic.schema_dict_field_info_extracted(with_class_name=False))
@@ -236,7 +234,7 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
         config = self._get_configuration_from_mapping(defined_schema, stored_in_defined=False)
         result = {}
         for name in config:
-            if name in self._keys_to_not_parse:
+            if name in self._keys_to_not_parse():
                 continue
 
             pre_specific_config = {**config["common"], **config[name]}
@@ -276,11 +274,11 @@ class HomologSchema(HomologousGroupMixin, SingleHomologousSchema, Generic[T]):
         origin: Type[T],
         instance_names: Optional[OrderedSet[str]] = None,
         name_getter: Optional[Callable[[...], OrderedSet[str]]] = None,
-    ) -> "HomologSchema":
+    ) -> "HomologueSchema":
         return cls(single_schema=SingleSchema(origin=origin), instance_names=instance_names, name_getter=name_getter)
 
 
-class GroupSchema(HomologousGroupMixin, NotCultureSchema):
+class GroupSchema(HomologousGroupMixin, AbstractSingleHomologousGroupSchema):
     """
     Represents a group of SingleSchema objects, and is used when you need to handle multiple models at the same time.
     """
@@ -288,12 +286,12 @@ class GroupSchema(HomologousGroupMixin, NotCultureSchema):
     single_schemas: OrderedSet[SingleSchema]
     mapping_name: str
 
-    prohibited_keys = {"common", SCHEMA_FIELD_INFO_MAPPING_KEY}
+    prohibited_keys: ProhibitedKeys = {"common", SCHEMA_FIELD_INFO_MAPPING_KEY}
 
     def __hash__(self):
         return hash(frozenset(self.single_schemas))
 
-    def __eq__(self, other: "GroupSchema") -> bool:
+    def __eq__(self, other: Self) -> bool:
         return self.single_schemas == other.single_schemas
 
     @field_validator("single_schemas")
@@ -319,25 +317,24 @@ class GroupSchema(HomologousGroupMixin, NotCultureSchema):
 
         return value
 
-    @computed_field(return_type=dict[str, SingleSchema])  # type: ignore[misc]
     @property
     def schema_mapping_name_to_instance_schema(self) -> dict[str, SingleSchema]:
         return {schema.mapping_name: schema for schema in self.single_schemas}
 
-    @computed_field(return_type=dict[str, Type])
     @cached_property
     def member_label_to_origin(self) -> dict[str, Type]:
         return {
             mapping_name: schema.origin for mapping_name, schema in self.schema_mapping_name_to_instance_schema.items()
         }
 
-    @computed_field(return_type=dict[str, Any])  # type: ignore[misc]
     @property
     def schema_alias_to_class(self) -> dict[str, Any]:
         if isinstance(self.single_schemas, Mapping):
             return {alias: model_schema.origin for alias, model_schema in self.single_schemas.items()}
         if isinstance(self.single_schemas, Set):
             return {model_schema.origin.__name__: model_schema.origin for alias, model_schema in self.single_schemas}
+
+        raise ValueError(f"Unsupported type {type(self.single_schemas)}")
 
     @validate_call
     def schema_with_field_metadata(
@@ -422,7 +419,7 @@ class GroupSchema(HomologousGroupMixin, NotCultureSchema):
         with_common: bool = True,
         with_required: bool = True,
         with_optional: bool = True,
-    ) -> dict[str, SchemaCommonMap, SchemaGroupMemberMap, NameToStrFieldMetadata]:
+    ) -> dict[str, SchemaCommonMap | SchemaGroupMemberMap | NameToStrFieldMetadata]:
         result = self.schema_with_field_metadata(
             with_common=with_common, with_required=with_required, with_optional=with_optional
         )
@@ -444,7 +441,7 @@ class GroupSchema(HomologousGroupMixin, NotCultureSchema):
         config = self._get_configuration_from_mapping(defined_schema, stored_in_defined=False)
         result = {}
         for name, model_schema in self.schema_mapping_name_to_instance_schema.items():
-            if name in self._keys_to_not_parse:
+            if name in self._keys_to_not_parse():
                 continue
 
             specific_config = {}
@@ -482,7 +479,10 @@ class GroupSchema(HomologousGroupMixin, NotCultureSchema):
         )
 
 
-class CultureSchema(BaseSchema):
+NotCultureSchema: TypeAlias = SingleSchema | HomologueSchema | GroupSchema
+
+
+class CultureSchema(AbstractSchema):
     source_schemas: OrderedSet[NotCultureSchema]
 
     @validate_call
@@ -490,7 +490,7 @@ class CultureSchema(BaseSchema):
         self,
         with_global_common: bool = True,
         with_micro_common: bool = True,
-        homolog_name_getter_kwargs: Optional[dict[str, Any]] = None,
+        homologue_name_getter_kwargs: Optional[dict[str, Any]] = None,
     ) -> dict:
         """
         Field merge strategies:
@@ -499,7 +499,7 @@ class CultureSchema(BaseSchema):
         ----------
         with_global_common
         with_micro_common
-        homolog_name_getter_kwargs
+        homologue_name_getter_kwargs
 
         Returns
         -------
@@ -533,8 +533,8 @@ class CultureSchema(BaseSchema):
 
                 result[model_schema.mapping_name] = extended
 
-            elif isinstance(model_schema, HomologSchema):
-                extended = model_schema.schema(with_common=True, name_getter_kwargs=homolog_name_getter_kwargs)
+            elif isinstance(model_schema, HomologueSchema):
+                extended = model_schema.schema(with_common=True, name_getter_kwargs=homologue_name_getter_kwargs)
 
                 combine_field_metadata(model_schema.single_schema.schematic.field_to_info)
 

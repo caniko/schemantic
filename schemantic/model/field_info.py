@@ -1,7 +1,7 @@
 import inspect
 import logging
 from types import UnionType
-from typing import Literal, Optional, Type, Union, get_type_hints
+from typing import Literal, Optional, Type, Union, get_type_hints, TypedDict
 
 from ordered_set import OrderedSet
 from pydantic import BaseModel, Field, computed_field
@@ -64,13 +64,18 @@ class FieldMetadata(BaseModel):
         self.owner_to_default.update(other.owner_to_default)
 
 
+class ModelSchemaDict(TypedDict):
+    required: dict[str, FieldMetadata]
+    optional: dict[str, FieldMetadata]
+
+
 def model_field_alias_to_field_info(
     model: Type[BaseModel], fields_to_exclude: Optional[set[str]] = None, include_private: bool = False
-) -> dict[Literal["required", "optional"], dict[str, FieldMetadata]]:
+) -> ModelSchemaDict:
     model_schema = model.model_json_schema()
 
     required = (
-        model_schema[SCHEMA_REQUIRED_MAPPING_KEY] if SCHEMA_REQUIRED_MAPPING_KEY in model_schema else OrderedSet()
+        model_schema[SCHEMA_REQUIRED_MAPPING_KEY] if SCHEMA_REQUIRED_MAPPING_KEY in model_schema else OrderedSet([])
     )
     try:
         optional = OrderedSet(model_schema["properties"]).difference(required)
@@ -78,7 +83,7 @@ def model_field_alias_to_field_info(
         msg = f"Schemantic does not support lazy typing, this was used in {model.__name__}"
         raise AttributeError(msg) from e
 
-    result = {}
+    result: ModelSchemaDict = {}
     for group, field_type in (("required", required), ("optional", optional)):
         field_to_field_info = {}
         for name in field_type:
@@ -117,10 +122,10 @@ def model_field_alias_to_field_info(
 
 def class_field_alias_to_type_string(
     source_cls: Type, fields_to_exclude: Optional[set[str]] = None, include_private: bool = False
-) -> dict[Literal["required", "optional"], dict[str, FieldMetadata]]:
+) -> ModelSchemaDict:
     constructor_signature = inspect.signature(source_cls.__init__)
 
-    result = {"required": {}, "optional": {}}
+    result = dict(required={}, optional={})
 
     type_hints = get_type_hints(source_cls.__init__)
     for param_name, param in constructor_signature.parameters.items():
@@ -148,7 +153,6 @@ def class_field_alias_to_type_string(
                 type_hint=field_type, owner_to_default=None if param.default is None else {source_cls: param.default}
             )
 
-    for group, field_to_info in result.items():
-        result[group] = dict_sorted_by_dict_key(field_to_info)
+    mapped_result = ModelSchemaDict(required=dict_sorted_by_dict_key(result["required"]), optional=dict_sorted_by_dict_key(result["optional"]))
 
-    return result
+    return mapped_result

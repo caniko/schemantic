@@ -1,1 +1,1 @@
-from .main import CultureSchema, GroupSchema, HomologSchema, SingleSchema
+from .main import CultureSchema, GroupSchema, HomologueSchema, SingleSchema

@@ -17,7 +17,7 @@ def update_assert_disjoint(dict_a: dict, dict_b: dict, error_msg_add: Optional[s
     dict_a.update(dict_b)
 
 
-def sorted_by_dict_key(source: dict[Hashable, Any]) -> list[tuple[Hashable, Any]]:
+def sorted_by_dict_key(source: dict) -> list[tuple[Hashable, Any]]:
     return sorted(source.items(), key=lambda kv: kv[0])
 
 
