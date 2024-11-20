@@ -20,7 +20,7 @@ SchemaDefinition: TypeAlias = Annotated[dict[str, Any], Doc("Definition of the o
 
 
 class ClassNameMixin(BaseModel):
-    class_name: str = ...
+    class_name: str
 
 
 class DefiningMixin(BaseModel):
@@ -95,13 +95,13 @@ class SingleSchema(DefiningSignatureModel, ClassNameMixin):
 
 class HomologueSchema(ClassNameMixin):
     common: dict = Field(default_factory=dict)
-    instances: Annotated[dict[str, SchemaDefinition], Doc("The definition of each class instance")] = ...
-    init_signature: SignatureModel = ...
+    instances: Annotated[dict[str, SchemaDefinition], Doc("The definition of each class instance")]
+    init_signature: SignatureModel
 
 
 class GroupSchema(BaseModel):
     common: CommonSignatureModel = Field(default_factory=CommonSignatureModel)
-    members: Annotated[dict[str, GroupMemberSchema], Doc("The definition of each group member")] = ...
+    members: Annotated[dict[str, GroupMemberSchema], Doc("The definition of each group member")]
     argument_to_typing: ArgNameToTypeInfo
 
 

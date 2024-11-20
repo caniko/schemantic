@@ -1,7 +1,5 @@
 from typing import Any, ClassVar
 
-from pydantic import BaseModel
-
 
 class SchemanticProjectMixin:
     include_private: ClassVar[bool] = False
@@ -14,13 +12,14 @@ class SchemanticProjectMixin:
 
         Usage:
             @classmethod
-            @property
             def fields_to_exclude_from_single_schema(cls) -> set[str]:
                 upstream = super().fields_to_exclude_from_single_schema()
                 upstream.update(("SOME", "FIELD"))
                 return upstream
 
-        :return:
+            Notice `upstream = super().fields_to_exclude_from_single_schema()`, it ensures
+            that we can inherit the exclusion fields from the parent class. You don't need
+            to do this on your root class; moreover, downstream classes could benefit from it.
         """
         return set()
 
@@ -30,16 +29,3 @@ class SchemanticProjectMixin:
             include_private=cls.include_private,
             fields_to_exclude=cls.fields_to_exclude_from_single_schema(),
         )
-
-
-SchemanticProjectType = type[SchemanticProjectMixin]
-
-
-class SchemanticProjectModelMixin(BaseModel, SchemanticProjectMixin):
-    @classmethod
-    def fields_to_exclude_from_single_schema(cls) -> set[str]:
-        return super().fields_to_exclude_from_single_schema()
-
-    @classmethod
-    def single_schema_kwargs(cls) -> dict[str, Any]:
-        return super().single_schema_kwargs()

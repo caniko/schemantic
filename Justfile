@@ -8,4 +8,7 @@ format:
 	@echo "Formatting complete 🎉"
 
 tcheck:
-	poetry run pyright schemantic
+	mypy -p schemantic
+
+test:
+    poetry run pytest tests
