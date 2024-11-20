@@ -3,12 +3,12 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from schemantic.project import SchemanticProjectModelMixin
+from schemantic.project import SchemanticProjectMixin
 from tests.model import infer_expected_schemas
 from tests.test_case.main import AbstractTestCulture, AbstractTestGroup, AbstractTestHomologue, AbstractTestSingle
 
 
-class TestModel(SchemanticProjectModelMixin, BaseModel):
+class TestModel(SchemanticProjectMixin, BaseModel):
     must_be: int
     we: str = "n"
 

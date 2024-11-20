@@ -63,7 +63,7 @@ def class_arg_alias_to_type_string(
 ) -> SignatureModel:
     constructor_signature = inspect.signature(source_cls.__init__)
 
-    result = dict(required={}, optional={})
+    result = SignatureModel()
 
     type_hints = get_type_hints(source_cls.__init__)
     for param_name, param in constructor_signature.parameters.items():
@@ -87,15 +87,15 @@ def class_arg_alias_to_type_string(
             arg_type = native_fallback_get(type_hint.__name__)
 
         if param.default == inspect.Parameter.empty:
-            result[REQUIRED_MAPPING_KEY][param_name] = InitArgTypeInfo(
+            result.required[param_name] = InitArgTypeInfo(
                 type_hint=arg_type, owner_to_default={source_cls: None}
             )
         else:
-            result[OPTIONAL_MAPPING_KEY][param_name] = InitArgTypeInfo(
+            result.optional[param_name] = InitArgTypeInfo(
                 type_hint=arg_type, owner_to_default={source_cls: param.default}
             )
 
-    return SignatureModel(**result)
+    return result
 
 
 def _fallback_get(source: dict, key: str) -> str:

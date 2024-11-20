@@ -5,8 +5,6 @@ def update_assert_disjoint(dict_a: dict, dict_b: dict, error_msg_add: Optional[s
     """
     Detects key collisions between two dictionaries.
 
-    :param dict_a: The first dictionary.
-    :param dict_b: The second dictionary.
     :raises ValueError: If a key collision is detected.
     """
     if any(k in dict_a and dict_a[k] != dict_a[k] for k in dict_b):

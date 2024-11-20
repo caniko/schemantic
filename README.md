@@ -1,30 +1,31 @@
 # Schemantic
 
-Create schemas from models or classes with homologous, grouped, or cultured paradigms.
+Do you have configurations stored in files? You have come to the right place! Create schemas from models or classes with homologous, grouped, or cultured paradigms. Batteries for loading and dumping included!
 
-Best with `pydantic.BaseModel` instances, but works with any Python class and `dataclass`/`pydantic.dataclass`!
+Supports `pydantic.BaseModel` and any Python class and `dataclass`/`pydantic.dataclass`!
 
 ## Classes of schemas
 
-### Homolog
+### Homologue
 ```python
 from pydantic import BaseModel
-from ordered_set import OrderedSet
-from schemantic.schema import HomologSchema
+from schemantic import HomologueSchemer
 
 class Thief(BaseModel):
     stolen_goods: int
     steals_only: str
 
-my_homolog = HomologSchema.from_model(Thief, instance_names=OrderedSet(["copycat", "pink_panther"]))
+my_homolog = HomologueSchemer.from_originating_type(Thief, instance_name_to_pre_definition={"copycat": {}, "pink_panther": {}})
 ```
+
+`HomologueSchemer` also accepts `instance_name_getter` parameter, which is a dictionary of instance names to pre-defined values.
 
 ### Grouped
 You can manage multiple schemas as a group:
 
 ```python
 from pydantic import BaseModel
-from schemantic.schema import GroupSchema
+from schemantic import GroupSchemer
 
 class Baker(BaseModel):
     baked_goods: int
@@ -34,7 +35,7 @@ class Cop(BaseModel):
     years_of_service: int
     citizen_of: str
 
-group_schema = GroupSchema.from_originating_types([Baker, Cop], )
+group_schema = GroupSchemer.from_originating_types([Baker, Cop])
 ```
 
 ### Culture
@@ -42,16 +43,16 @@ You can also manage multiple types of schemas under one culture:
 
 ```python
 from ordered_set import OrderedSet
-from schemantic.schema import CultureSchema
+from schemantic import CultureSchemer
 
-CultureSchema(source_schemas=OrderedSet([homolog_schema, group_schema]))
+CultureSchemer(source_schemas=OrderedSet([homolog_schema, group_schema]))
 ```
 
 ## Methods
-`HomologSchema`, `GroupSchema`, and `CultureSchema` have the following methods.
+`HomologueSchemer`, `GroupSchemer`, and `CultureSchemer` have the following methods.
 
 ### `.schema()`
-Creates a dictionary, which represents the schema of the origin class/model.
+Creates a BaseModel derived class instance, which represents the schema of the origin class/model.
 
 ```python
 my_homolog.schema()
@@ -153,9 +154,7 @@ class TestModel(SchemanticProjectModelMixin, BaseModel):
     exclude_me: Optional[int] = None
     _exclude_me_too: Optional[float] = None
 
-    @classmethod  # type: ignore[misc]
-    @computed_field(return_type=set[str])
-    @property
+    @classmethod
     def fields_to_exclude_from_single_schema(cls) -> set[str]:
         upstream = super().fields_to_exclude_from_single_schema
         upstream.update(("exclude_me",))
