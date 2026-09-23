@@ -1,6 +1,6 @@
 import logging
 from copy import deepcopy
-from typing import Annotated, Final, TypeAlias
+from typing import Annotated, Any, Final, TypeAlias
 
 from pydantic import BaseModel, Field, field_validator, model_serializer
 from typing_extensions import Doc, Self
@@ -13,7 +13,7 @@ DUMP_RAW_FIELD_TYPE_INFO_CTX: Final[dict] = {DUMP_RAW_FIELD_TYPE_INFO_KEY: True}
 
 
 OwnerToDefault: TypeAlias = Annotated[
-    dict[type, str | None], Doc("Owner to default value mapping. Owner is a class type.")
+    dict[type, Any], Doc("Owner to native default value mapping. Owner is a class type.")
 ]
 
 
@@ -51,7 +51,7 @@ class InitArgTypeInfo(BaseModel, frozen=True):
         default_string = "; ".join(
             f"{owner.__name__} -> {default}"
             for owner, default in sorted(self.owner_to_default.items(), key=lambda kv: kv[0].__name__)
-            if default
+            if default is not None
         )
         if default_string:
             return f"{self.type_hint}(default: {default_string})"
